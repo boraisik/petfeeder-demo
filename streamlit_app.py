@@ -274,7 +274,7 @@ def main():
                         "amount": dog_info['default_amount'],
                         "type": "Toplu Besleme"
                     })
-                    await asyncio.sleep(0.5)
+                    time.sleep(0.5)
             
             st.success("🎉 Tüm köpekler başarıyla beslendi!")
             st.balloons()
@@ -388,4 +388,3 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
