@@ -6,7 +6,6 @@ import json
 import requests
 from io import BytesIO
 from PIL import Image
-# import aiohttp  # Not needed for demo
 from datetime import datetime, timedelta
 import pandas as pd
 import plotly.express as px
