@@ -452,7 +452,7 @@ elif st.session_state.demo_stage == 'dashboard':
     """, unsafe_allow_html=True)
     
     # Main Tabs
-    tabs = st.tabs(["📊 Özet", "🍖 Besleme", "💰 Maliyet", "🏥 Sağlık", "🤖 AI Asistan", "💎 Premium"])
+    tabs = st.tabs(["📊 Özet", "🍖 Besleme", "💰 Maliyet", "🏥 Sağlık", "🤖 AI Asistan"])
     
     # Summary Tab
     with tabs[0]:
@@ -506,7 +506,7 @@ elif st.session_state.demo_stage == 'dashboard':
         
         with col2:
             if st.button("📸 Canlı Görüntü", use_container_width=True):
-                st.info("📹 Canlı yayın özelliği Premium üyelikte aktif!")
+                st.info("📹 Canlı yayın özelliği yakında aktif!")
         
         with col3:
             if st.button("📊 Günlük Rapor", use_container_width=True):
@@ -836,138 +836,12 @@ elif st.session_state.demo_stage == 'dashboard':
                         <h4>🤖 Claude AI Yanıtı:</h4>
                         <p>Sorunuz analiz ediliyor. {user['dog_name']} için özel yanıt hazırlanıyor...</p>
                         <p style="margin-top: 15px;">
-                        Bu demo versiyonda sınırlı AI desteği sunulmaktadır. 
-                        Premium üyelikte 7/24 gerçek zamanlı AI desteği alabilirsiniz!
+                        Demo versiyonda temel AI desteği sunulmaktadır. 
+                        Gelişmiş özellikler için tam sürümü kullanabilirsiniz!
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
     
-    # Premium Tab
-    with tabs[5]:
-        st.markdown("## 💎 Premium Özellikleri")
-        
-        st.markdown("""
-        <div style="text-align: center; margin: 40px 0;">
-            <h2>🚀 PetFeeder Pro Premium</h2>
-            <p style="font-size: 1.2rem; color: #6c757d;">
-                Köpeğinizin sağlığı için en gelişmiş özellikler
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Pricing cards
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("""
-            <div class="feature-card" style="text-align: center;">
-                <h3>Başlangıç</h3>
-                <p style="font-size: 2.5rem; color: #667eea; margin: 20px 0;">
-                    ₺199<span style="font-size: 1rem;">/ay</span>
-                </p>
-                <ul style="text-align: left; list-style: none; padding: 0;">
-                    <li>✅ Temel besleme kontrolü</li>
-                    <li>✅ Haftalık raporlar</li>
-                    <li>✅ Email desteği</li>
-                    <li>❌ Video izleme</li>
-                    <li>❌ AI danışmanlık</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("""
-            <div class="price-card" style="transform: scale(1.05);">
-                <div style="position: absolute; top: -15px; right: 20px; background: #ffc107; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">
-                    EN POPÜLER
-                </div>
-                <h3>Professional</h3>
-                <p style="font-size: 3rem; margin: 20px 0;">
-                    ₺399<span style="font-size: 1rem;">/ay</span>
-                </p>
-                <ul style="text-align: left; list-style: none; padding: 0;">
-                    <li>✅ Tüm başlangıç özellikleri</li>
-                    <li>✅ 7/24 canlı video</li>
-                    <li>✅ AI sağlık analizi</li>
-                    <li>✅ Otomatik sipariş</li>
-                    <li>✅ Telefon desteği</li>
-                </ul>
-                <button style="width: 100%; padding: 15px; background: white; color: #667eea; border: none; border-radius: 10px; font-weight: 600; margin-top: 20px;">
-                    Hemen Başla
-                </button>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown("""
-            <div class="feature-card" style="text-align: center;">
-                <h3>Enterprise</h3>
-                <p style="font-size: 2.5rem; color: #667eea; margin: 20px 0;">
-                    ₺799<span style="font-size: 1rem;">/ay</span>
-                </p>
-                <ul style="text-align: left; list-style: none; padding: 0;">
-                    <li>✅ Tüm Pro özellikleri</li>
-                    <li>✅ Çoklu köpek desteği</li>
-                    <li>✅ Veteriner entegrasyonu</li>
-                    <li>✅ Özel raporlar</li>
-                    <li>✅ API erişimi</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Testimonials
-        st.markdown("### 🌟 Kullanıcı Yorumları")
-        
-        testimonials = [
-            {
-                "name": "Ayşe K.",
-                "dog": "Golden Retriever",
-                "text": "PetFeeder Pro sayesinde işte iken bile Max'i besleyebiliyorum. Kilo takibi harika!"
-            },
-            {
-                "name": "Mehmet Y.",
-                "dog": "Beagle",
-                "text": "AI önerileri gerçekten işe yarıyor. Lucky 2 ayda ideal kilosuna ulaştı."
-            },
-            {
-                "name": "Zeynep T.",
-                "dog": "Pug",
-                "text": "Maliyet takibi sayesinde aylık 500₺ tasarruf ediyorum. Kesinlikle tavsiye ederim!"
-            }
-        ]
-        
-        cols = st.columns(3)
-        for i, testimonial in enumerate(testimonials):
-            with cols[i]:
-                st.markdown(f"""
-                <div class="testimonial-card">
-                    <p>"{testimonial['text']}"</p>
-                    <p style="margin-top: 20px; font-weight: 600;">
-                        {testimonial['name']}
-                    </p>
-                    <p style="color: #6c757d; font-size: 0.9rem;">
-                        {testimonial['dog']} sahibi
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # CTA
-        st.markdown("""
-        <div style="text-align: center; margin: 60px 0;">
-            <h2>🎁 Özel Kampanya!</h2>
-            <p style="font-size: 1.3rem; color: #dc3545; margin: 20px 0;">
-                İlk ay %50 indirimli! Kod: <strong>PETLOVE50</strong>
-            </p>
-            <a href="https://wa.me/905555555555?text=PetFeeder%20Pro%20hakkında%20bilgi%20almak%20istiyorum" 
-               target="_blank" 
-               style="display: inline-block; background: #25d366; color: white; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; margin: 10px;">
-                💬 WhatsApp'tan Ulaşın
-            </a>
-            <p style="color: #6c757d; margin-top: 20px;">
-                7/24 müşteri desteği • Ücretsiz kurulum • 30 gün para iade garantisi
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
