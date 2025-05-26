@@ -167,9 +167,9 @@ def get_weather_alerts():
         "alerts": alerts
     }
 
-def calculate_costs(dogs_data):
+def calculate_costs(devices):
     """Maliyet hesaplama"""
-    total_daily = sum(dog['daily_amount'] for dog in dogs_data)
+    total_daily = sum(device['daily_amount'] for device in devices.values())
     total_monthly = total_daily * 30
     
     # Ortalama mama fiyatı 450 TL/kg
@@ -462,7 +462,7 @@ elif st.session_state.demo_stage == 'dashboard':
         st.markdown("### 📊 Sistem Raporları")
         
         # Maliyet analizi
-        costs = calculate_costs(user['dogs'])
+        costs = calculate_costs(devices)
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
