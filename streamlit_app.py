@@ -274,7 +274,7 @@ DOG_BREEDS = {
 
 # Helper functions
 def calculate_age(birth_date):
-    today = datetime.now()
+    today = datetime.now().date()
     age_days = (today - birth_date).days
     years = age_days // 365
     months = (age_days % 365) // 30
