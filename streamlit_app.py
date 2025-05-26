@@ -4,855 +4,539 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import random
-import json
-from plotly.subplots import make_subplots
+import asyncio
 
 # Sayfa konfigürasyonu
 st.set_page_config(
-    page_title="PetFeeder Pro - Akıllı Köpek Besleme Sistemi",
+    page_title="PetKit Akıllı Besleyici Kontrol Sistemi",
     page_icon="🐾",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Modern CSS
+# CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     * {
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     
     .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 3.5rem;
+        font-size: 2.5rem;
         font-weight: 700;
         text-align: center;
         margin-bottom: 0.5rem;
-        animation: gradient 3s ease infinite;
+        color: #1f2937;
     }
     
-    @keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .sub-header {
-        text-align: center;
-        color: #6c757d;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 60px 40px;
-        border-radius: 20px;
-        text-align: center;
-        margin-bottom: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    
-    .feature-card {
+    .device-card {
         background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        margin: 20px 0;
-        transition: all 0.3s ease;
-        height: 100%;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
-    .feature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    .device-online {
+        border-color: #10b981;
+        background: #f0fdf4;
     }
     
-    .feature-icon {
-        font-size: 3rem;
-        margin-bottom: 15px;
+    .feed-button {
+        background: #10b981;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    
+    .feed-button:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .status-online {
+        background: #10b981;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
     }
     
     .metric-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        padding: 25px;
-        border-radius: 15px;
+        background: #f9fafb;
+        padding: 20px;
+        border-radius: 12px;
         text-align: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
     }
     
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #667eea;
-    }
-    
-    .metric-label {
-        color: #6c757d;
-        font-size: 1rem;
-        margin-top: 5px;
-    }
-    
-    .pet-profile-card {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        text-align: center;
+    .weather-card {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
         margin: 20px 0;
     }
     
-    .pet-avatar {
-        font-size: 5rem;
+    .ai-chat {
+        background: #f3f4f6;
+        padding: 20px;
+        border-radius: 12px;
+        margin: 10px 0;
+    }
+    
+    .feeding-log {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .demo-banner {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+        padding: 15px;
+        border-radius: 8px;
         margin-bottom: 20px;
-        animation: bounce 2s infinite;
-    }
-    
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-    
-    .price-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 20px;
         text-align: center;
-        margin: 20px 0;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .price-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: shimmer 3s infinite;
-    }
-    
-    @keyframes shimmer {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .cta-button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 15px 40px;
-        border-radius: 50px;
-        font-size: 1.2rem;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-    }
-    
-    .cta-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
-    }
-    
-    .testimonial-card {
-        background: #f8f9fa;
-        padding: 30px;
-        border-radius: 15px;
-        margin: 20px 0;
-        position: relative;
-    }
-    
-    .testimonial-card::before {
-        content: '"';
-        font-size: 4rem;
-        position: absolute;
-        top: -10px;
-        left: 20px;
-        color: #667eea;
-        opacity: 0.3;
-    }
-    
-    .alert-card {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-    }
-    
-    .success-card {
-        background: #d4edda;
-        border-left: 4px solid #28a745;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-    }
-    
-    .info-card {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-    }
-    
-    .dashboard-stat {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    
-    .dashboard-stat:hover {
-        transform: scale(1.05);
-    }
-    
-    .loading-animation {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Session state initialization
+# Session state
 if 'user_data' not in st.session_state:
     st.session_state.user_data = None
 
 if 'demo_stage' not in st.session_state:
     st.session_state.demo_stage = 'welcome'
 
-if 'feeding_history' not in st.session_state:
-    st.session_state.feeding_history = []
+if 'feeding_logs' not in st.session_state:
+    st.session_state.feeding_logs = []
 
-if 'health_records' not in st.session_state:
-    st.session_state.health_records = []
-
-# Dog breed data
-DOG_BREEDS = {
-    "Golden Retriever": {"min_weight": 25, "max_weight": 34, "daily_food_factor": 30},
-    "Labrador Retriever": {"min_weight": 25, "max_weight": 36, "daily_food_factor": 32},
-    "German Shepherd": {"min_weight": 22, "max_weight": 40, "daily_food_factor": 28},
-    "Bulldog": {"min_weight": 18, "max_weight": 25, "daily_food_factor": 25},
-    "Poodle": {"min_weight": 20, "max_weight": 32, "daily_food_factor": 26},
-    "Beagle": {"min_weight": 9, "max_weight": 11, "daily_food_factor": 35},
-    "Yorkshire Terrier": {"min_weight": 2, "max_weight": 3, "daily_food_factor": 40},
-    "Pug": {"min_weight": 6, "max_weight": 9, "daily_food_factor": 30},
-    "Shih Tzu": {"min_weight": 4, "max_weight": 7, "daily_food_factor": 32},
-    "Siberian Husky": {"min_weight": 20, "max_weight": 27, "daily_food_factor": 30},
-    "Boxer": {"min_weight": 25, "max_weight": 32, "daily_food_factor": 28},
-    "Dachshund": {"min_weight": 7, "max_weight": 14, "daily_food_factor": 30},
-    "Great Dane": {"min_weight": 50, "max_weight": 82, "daily_food_factor": 25},
-    "Chihuahua": {"min_weight": 1.5, "max_weight": 3, "daily_food_factor": 40},
-    "Rottweiler": {"min_weight": 35, "max_weight": 60, "daily_food_factor": 25},
-    "Border Collie": {"min_weight": 12, "max_weight": 20, "daily_food_factor": 30},
-    "Cocker Spaniel": {"min_weight": 12, "max_weight": 15, "daily_food_factor": 30},
-    "French Bulldog": {"min_weight": 8, "max_weight": 13, "daily_food_factor": 28},
-    "Maltese": {"min_weight": 3, "max_weight": 4, "daily_food_factor": 35},
-    "Diğer": {"min_weight": 5, "max_weight": 50, "daily_food_factor": 30}
-}
+if 'devices' not in st.session_state:
+    st.session_state.devices = {}
 
 # Helper functions
-def calculate_age(birth_date):
-    today = datetime.now().date()
-    age_days = (today - birth_date).days
-    years = age_days // 365
-    months = (age_days % 365) // 30
-    return years, months
-
-def calculate_daily_food(weight, breed, age_years):
-    base_amount = weight * DOG_BREEDS.get(breed, {"daily_food_factor": 30})["daily_food_factor"]
-    
-    # Age adjustment
-    if age_years < 1:
-        base_amount *= 1.5  # Puppies need more
-    elif age_years > 7:
-        base_amount *= 0.9  # Senior dogs need less
-    
-    return int(base_amount)
-
-def get_health_status(weight, breed):
-    breed_info = DOG_BREEDS.get(breed, {"min_weight": 5, "max_weight": 50})
-    if weight < breed_info["min_weight"]:
-        return "Düşük Kilo", "warning", "Veteriner kontrolü önerilir"
-    elif weight > breed_info["max_weight"]:
-        return "Fazla Kilo", "danger", "Diyet programı önerilir"
-    else:
-        return "İdeal Kilo", "success", "Sağlıklı kilo aralığında"
-
-def generate_feeding_schedule(daily_amount):
-    morning = int(daily_amount * 0.6)
-    evening = int(daily_amount * 0.4)
+def simulate_feeding(device_id, amount):
+    """PetKit cihazına besleme komutu gönderme simülasyonu"""
+    # Gerçek sistemde: await client.control_feeder(device_id, amount)
     return {
-        "morning": {"time": "07:00", "amount": morning},
-        "evening": {"time": "18:00", "amount": evening}
+        "success": True,
+        "device_id": device_id,
+        "amount": amount,
+        "timestamp": datetime.now()
+    }
+
+def get_weather_alerts():
+    """AccuWeather API simülasyonu"""
+    weather = random.choice(["Güneşli", "Bulutlu", "Yağmurlu", "Fırtınalı"])
+    temp = random.randint(10, 35)
+    
+    alerts = []
+    if weather in ["Yağmurlu", "Fırtınalı"]:
+        alerts.append("⚠️ Yağışlı hava: Köpeklerin pati temizliği önemli!")
+    if temp > 30:
+        alerts.append("🌡️ Sıcak hava: Su tüketimini artırın!")
+    elif temp < 5:
+        alerts.append("❄️ Soğuk hava: Mama miktarını %10 artırabilirsiniz")
+    
+    return {
+        "condition": weather,
+        "temperature": temp,
+        "alerts": alerts
+    }
+
+def calculate_costs(dogs_data):
+    """Maliyet hesaplama"""
+    total_daily = sum(dog['daily_amount'] for dog in dogs_data)
+    total_monthly = total_daily * 30
+    
+    # Ortalama mama fiyatı 450 TL/kg
+    monthly_cost = (total_monthly / 1000) * 450
+    
+    return {
+        "daily_grams": total_daily,
+        "monthly_kg": total_monthly / 1000,
+        "monthly_cost": monthly_cost,
+        "yearly_cost": monthly_cost * 12
     }
 
 # Welcome Screen
 if st.session_state.demo_stage == 'welcome':
-    st.markdown('<h1 class="main-header">🐾 PetFeeder Pro</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Köpeğinizin Sağlığı İçin Akıllı Besleme Çözümü</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🐾 PetKit Akıllı Besleyici Kontrol Sistemi</h1>', unsafe_allow_html=True)
     
     st.markdown("""
-    <div class="hero-section">
-        <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Köpeğinizi Uzaktan Besleyin, Sağlığını Takip Edin! 🦮</h2>
-        <p style="font-size: 1.3rem; margin-bottom: 30px;">
-            Yapay zeka destekli besleme programları, sağlık takibi ve 
-            uzaktan kontrol ile köpeğinizin mutluluğu artık cebinizde!
-        </p>
-        <p style="font-size: 1.1rem; opacity: 0.9;">
-            🎯 10.000+ mutlu köpek sahibi • ⭐ 4.9/5 kullanıcı puanı • 🏆 2024 En İyi Pet Tech Ödülü
-        </p>
+    <div class="demo-banner">
+        <h3>📱 DEMO MODU - Gerçek Sistem Simülasyonu</h3>
+        <p>Bu demo, PetKit cihazlarınızı uzaktan kontrol eden gerçek sistemin bir gösterimidir</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Features
+    # Sistem özellikleri
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📱</div>
-            <h3>Uzaktan Kontrol</h3>
-            <p>İster evde ister işte olun, köpeğinizi tek tuşla besleyin. 
-            Anlık bildirimlerle her şey kontrolünüzde!</p>
+        <div class="device-card">
+            <h3>🔌 PetKit Entegrasyonu</h3>
+            <p>• Gerçek PetKit cihazlarınızı kontrol edin</p>
+            <p>• Çoklu cihaz desteği</p>
+            <p>• Anlık durum takibi</p>
+            <p>• Otomatik besleme programları</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🤖</div>
-            <h3>AI Destekli Öneriler</h3>
-            <p>Claude AI ile köpeğinize özel beslenme programı, 
-            sağlık tavsiyeleri ve aktivite önerileri!</p>
+        <div class="device-card">
+            <h3>🤖 Claude AI Desteği</h3>
+            <p>• "Köpekleri besle" komutunu anlama</p>
+            <p>• Özel besleme önerileri</p>
+            <p>• Sağlık tavsiyeleri</p>
+            <p>• Doğal dil işleme</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <h3>Detaylı Analitik</h3>
-            <p>Kilo takibi, besleme geçmişi, sağlık raporları 
-            ve maliyet analizleri tek panoda!</p>
+        <div class="device-card">
+            <h3>🌦️ Akıllı Özellikler</h3>
+            <p>• Hava durumu entegrasyonu</p>
+            <p>• Besleme geçmişi takibi</p>
+            <p>• Maliyet analizi</p>
+            <p>• Sağlık raporları</p>
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Call to action
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("""
-        <div style="text-align: center; margin: 40px 0;">
-            <h2>🎁 Özel Demo Deneyimi</h2>
-            <p style="font-size: 1.2rem; color: #6c757d; margin: 20px 0;">
-                Köpeğinizin bilgilerini girin, size özel hazırlanmış 
-                akıllı besleme programınızı hemen görün!
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("🚀 Hemen Başla", key="start_demo", use_container_width=True):
-            st.session_state.demo_stage = 'user_input'
-            st.rerun()
-
-# User Input Screen
-elif st.session_state.demo_stage == 'user_input':
-    st.markdown('<h1 class="main-header">🐾 Köpeğinizi Tanıyalım</h1>', unsafe_allow_html=True)
+    # Kullanıcı bilgileri formu
+    st.markdown("### 🚀 Demo'yu Başlatmak İçin Bilgilerinizi Girin")
     
-    with st.form("user_info_form"):
+    with st.form("demo_setup"):
         col1, col2 = st.columns(2)
         
         with col1:
             user_name = st.text_input("👤 Adınız", placeholder="Örn: Ahmet")
-            dog_name = st.text_input("🐕 Köpeğinizin Adı", placeholder="Örn: Max")
-            dog_breed = st.selectbox("🦴 Cinsi", options=list(DOG_BREEDS.keys()))
+            petkit_email = st.text_input("📧 PetKit Email (Demo)", value="demo@petkit.com", disabled=True)
         
         with col2:
-            dog_weight = st.number_input("⚖️ Kilosu (kg)", min_value=0.5, max_value=100.0, step=0.5, value=10.0)
-            dog_birthdate = st.date_input("🎂 Doğum Tarihi", 
-                                        min_value=datetime(2000, 1, 1), 
-                                        max_value=datetime.now(),
-                                        value=datetime.now() - timedelta(days=730))
-            dog_gender = st.radio("⚥ Cinsiyeti", ["Erkek", "Dişi"], horizontal=True)
+            dog_count = st.number_input("🐕 Köpek Sayısı", min_value=1, max_value=4, value=2)
+            location = st.text_input("📍 Konum", placeholder="İstanbul")
         
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            submit = st.form_submit_button("✨ Demo'yu Başlat", use_container_width=True)
+        st.markdown("#### 🐾 Köpek Bilgileri")
         
-        if submit:
-            if all([user_name, dog_name]):
-                # Calculate age
-                age_years, age_months = calculate_age(dog_birthdate)
-                
-                # Store user data
-                st.session_state.user_data = {
-                    "user_name": user_name,
-                    "dog_name": dog_name,
-                    "dog_breed": dog_breed,
-                    "dog_weight": dog_weight,
-                    "dog_birthdate": dog_birthdate,
-                    "dog_gender": dog_gender,
-                    "age_years": age_years,
-                    "age_months": age_months,
-                    "daily_food": calculate_daily_food(dog_weight, dog_breed, age_years),
-                    "avatar": "🦮" if dog_breed in ["Golden Retriever", "Labrador Retriever"] else "🐕"
+        dogs = []
+        for i in range(int(dog_count)):
+            st.markdown(f"**Köpek {i+1}**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                name = st.text_input(f"İsim", key=f"dog_name_{i}", placeholder=f"Örn: {'Max' if i==0 else 'Luna'}")
+            with col2:
+                breed = st.selectbox(f"Cins", key=f"dog_breed_{i}", 
+                                   options=["Pug", "Golden Retriever", "Beagle", "Bulldog", "Husky", "Diğer"])
+            with col3:
+                weight = st.number_input(f"Kilo (kg)", key=f"dog_weight_{i}", min_value=1.0, max_value=80.0, value=15.0 if i==0 else 8.0)
+            
+            dogs.append({"name": name, "breed": breed, "weight": weight})
+        
+        submit = st.form_submit_button("✨ Sistemi Başlat", use_container_width=True)
+        
+        if submit and user_name and all(dog['name'] for dog in dogs):
+            # Cihazları oluştur
+            devices = {}
+            for i, dog in enumerate(dogs):
+                device_id = f"D22{random.randint(100000, 999999)}"
+                devices[device_id] = {
+                    "name": f"{dog['name']} Besleyici",
+                    "dog": dog['name'],
+                    "breed": dog['breed'],
+                    "weight": dog['weight'],
+                    "daily_amount": int(dog['weight'] * 30),  # Basit hesaplama
+                    "online": True,
+                    "battery": random.randint(70, 100),
+                    "food_level": random.randint(40, 90)
                 }
-                
-                st.session_state.demo_stage = 'dashboard'
-                st.rerun()
-            else:
-                st.error("⚠️ Lütfen tüm alanları doldurun!")
+            
+            st.session_state.user_data = {
+                "name": user_name,
+                "location": location,
+                "dogs": dogs
+            }
+            st.session_state.devices = devices
+            st.session_state.demo_stage = 'dashboard'
+            st.rerun()
 
 # Dashboard
 elif st.session_state.demo_stage == 'dashboard':
     user = st.session_state.user_data
+    devices = st.session_state.devices
     
     # Header
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown(f'<h1 class="main-header">Merhaba {user["user_name"]}! 👋</h1>', unsafe_allow_html=True)
+        st.markdown(f'<h1 class="main-header">Hoş geldiniz, {user["name"]}! 👋</h1>', unsafe_allow_html=True)
     with col2:
         if st.button("🔄 Yeni Demo"):
             st.session_state.demo_stage = 'welcome'
             st.session_state.user_data = None
             st.rerun()
     
-    # Pet Profile Card
-    st.markdown(f"""
-    <div class="pet-profile-card">
-        <div class="pet-avatar">{user["avatar"]}</div>
-        <h2>{user["dog_name"]}</h2>
-        <p style="color: #6c757d; font-size: 1.2rem;">
-            {user["dog_breed"]} • {user["age_years"]} yaş {user["age_months"]} ay • {user["dog_weight"]} kg
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Ana sekmeler
+    tabs = st.tabs(["🏠 Kontrol Paneli", "🤖 AI Asistan", "📊 Raporlar", "⚙️ Ayarlar"])
     
-    # Main Tabs
-    tabs = st.tabs(["📊 Özet", "🍖 Besleme", "💰 Maliyet", "🏥 Sağlık", "🤖 AI Asistan"])
-    
-    # Summary Tab
+    # Kontrol Paneli
     with tabs[0]:
-        # Key Metrics
-        col1, col2, col3, col4 = st.columns(4)
+        # Hava durumu
+        weather = get_weather_alerts()
+        if weather['alerts']:
+            st.markdown(f"""
+            <div class="weather-card">
+                <h3>🌡️ {weather['temperature']}°C - {weather['condition']}</h3>
+                {"<br>".join(weather['alerts'])}
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Cihazlar
+        st.markdown("### 🔌 PetKit Cihazlarınız")
+        
+        device_cols = st.columns(len(devices))
+        
+        for idx, (device_id, device) in enumerate(devices.items()):
+            with device_cols[idx]:
+                status_class = "device-online" if device['online'] else ""
+                st.markdown(f"""
+                <div class="device-card {status_class}">
+                    <span class="status-indicator status-online"></span>
+                    <strong>{device['name']}</strong>
+                    <p style="color: #6b7280; margin: 5px 0;">ID: {device_id}</p>
+                    <hr style="margin: 10px 0;">
+                    <p>🐕 {device['dog']} ({device['breed']})</p>
+                    <p>⚖️ {device['weight']} kg</p>
+                    <p>🍖 Günlük: {device['daily_amount']}g</p>
+                    <p>🔋 Pil: %{device['battery']}</p>
+                    <p>🥫 Mama: %{device['food_level']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Besleme butonları
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button(f"Sabah ({device['daily_amount']*0.6:.0f}g)", key=f"morning_{device_id}"):
+                        result = simulate_feeding(device_id, device['daily_amount']*0.6)
+                        st.success(f"✅ {device['dog']} beslendi!")
+                        st.session_state.feeding_logs.append({
+                            "time": datetime.now(),
+                            "dog": device['dog'],
+                            "amount": device['daily_amount']*0.6,
+                            "type": "Sabah"
+                        })
+                
+                with col2:
+                    if st.button(f"Akşam ({device['daily_amount']*0.4:.0f}g)", key=f"evening_{device_id}"):
+                        result = simulate_feeding(device_id, device['daily_amount']*0.4)
+                        st.success(f"✅ {device['dog']} beslendi!")
+                        st.session_state.feeding_logs.append({
+                            "time": datetime.now(),
+                            "dog": device['dog'],
+                            "amount": device['daily_amount']*0.4,
+                            "type": "Akşam"
+                        })
+        
+        # Toplu besleme
+        st.markdown("### 🍖 Hızlı İşlemler")
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            weight_status, status_type, status_message = get_health_status(user["dog_weight"], user["dog_breed"])
-            color = {"success": "#28a745", "warning": "#ffc107", "danger": "#dc3545"}[status_type]
+            if st.button("🐕 Tüm Köpekleri Besle", use_container_width=True):
+                with st.spinner("Cihazlara komut gönderiliyor..."):
+                    for device_id, device in devices.items():
+                        simulate_feeding(device_id, device['daily_amount']//2)
+                        st.session_state.feeding_logs.append({
+                            "time": datetime.now(),
+                            "dog": device['dog'],
+                            "amount": device['daily_amount']//2,
+                            "type": "Manuel"
+                        })
+                    st.success("✅ Tüm köpekler beslendi!")
+                    st.balloons()
+        
+        with col2:
+            if st.button("📊 Günlük Rapor", use_container_width=True):
+                st.info("📈 Rapor hazırlanıyor...")
+        
+        with col3:
+            if st.button("🔄 Cihaz Durumunu Yenile", use_container_width=True):
+                st.success("✅ Cihaz durumları güncellendi!")
+        
+        # Son beslemeler
+        if st.session_state.feeding_logs:
+            st.markdown("### 📜 Son Beslemeler")
+            for log in st.session_state.feeding_logs[-5:]:
+                st.markdown(f"""
+                <div class="feeding-log">
+                    🕐 {log['time'].strftime('%H:%M')} - 
+                    🐕 {log['dog']} - 
+                    🍖 {log['amount']:.0f}g - 
+                    📍 {log['type']}
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # AI Asistan
+    with tabs[1]:
+        st.markdown("### 🤖 Claude AI Asistanı")
+        
+        # Örnek komutlar
+        st.markdown("#### 💡 Örnek Komutlar")
+        example_commands = [
+            "Köpekleri besle",
+            "Max'i besle",
+            "Sabah besleme zamanı",
+            "Bugün kaç gram mama verildi?",
+            "Hava durumuna göre besleme önerisi"
+        ]
+        
+        cols = st.columns(3)
+        for i, cmd in enumerate(example_commands):
+            with cols[i % 3]:
+                if st.button(cmd, key=f"ex_cmd_{i}"):
+                    st.session_state.ai_command = cmd
+        
+        # AI chat
+        user_input = st.text_area("Claude'a komut verin veya soru sorun...", 
+                                 value=st.session_state.get('ai_command', ''),
+                                 height=100)
+        
+        if st.button("🤖 Gönder", use_container_width=True) and user_input:
+            with st.spinner("Claude yanıt hazırlıyor..."):
+                # Besleme komutlarını kontrol et
+                if any(word in user_input.lower() for word in ["besle", "mama ver", "yemek"]):
+                    st.markdown("""
+                    <div class="ai-chat">
+                        <strong>🤖 Claude:</strong><br>
+                        Besleme komutunu algıladım. İşlemi gerçekleştiriyorum...<br><br>
+                        <strong>&lt;BESLEME_KOMUTU&gt;</strong>Tüm köpekler besleniyor<strong>&lt;/BESLEME_KOMUTU&gt;</strong><br><br>
+                        ✅ Besleme komutları PetKit cihazlarına gönderildi!
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Otomatik besleme
+                    for device_id, device in devices.items():
+                        simulate_feeding(device_id, device['daily_amount']//2)
+                    st.success("✅ Tüm köpekler Claude tarafından beslendi!")
+                    
+                else:
+                    # Diğer yanıtlar
+                    st.markdown(f"""
+                    <div class="ai-chat">
+                        <strong>🤖 Claude:</strong><br>
+                        Sorunuzu analiz ediyorum: "{user_input}"<br><br>
+                        Sisteminizdeki {len(devices)} adet PetKit cihazı aktif durumda. 
+                        İstediğiniz zaman "köpekleri besle" komutu ile tüm cihazları aktive edebilirim.
+                    </div>
+                    """, unsafe_allow_html=True)
+    
+    # Raporlar
+    with tabs[2]:
+        st.markdown("### 📊 Sistem Raporları")
+        
+        # Maliyet analizi
+        costs = calculate_costs(user['dogs'])
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-value" style="color: {color};">{weight_status}</div>
-                <div class="metric-label">Kilo Durumu</div>
+                <h3>{costs['daily_grams']}g</h3>
+                <p>Günlük Tüketim</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-value">{user["daily_food"]}g</div>
-                <div class="metric-label">Günlük Mama</div>
+                <h3>{costs['monthly_kg']:.1f} kg</h3>
+                <p>Aylık Tüketim</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
-            monthly_cost = (user["daily_food"] * 30 / 1000) * 450  # 450 TL/kg average
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-value">{monthly_cost:,.0f}₺</div>
-                <div class="metric-label">Aylık Maliyet</div>
+                <h3>{costs['monthly_cost']:,.0f}₺</h3>
+                <p>Aylık Maliyet</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col4:
-            feeding_rate = random.randint(85, 98)
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-value">%{feeding_rate}</div>
-                <div class="metric-label">Besleme Başarısı</div>
+                <h3>{costs['yearly_cost']:,.0f}₺</h3>
+                <p>Yıllık Maliyet</p>
             </div>
             """, unsafe_allow_html=True)
         
-        # Quick Actions
-        st.markdown("### ⚡ Hızlı İşlemler")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("🍖 Hemen Besle", use_container_width=True):
-                st.success(f"✅ {user['dog_name']} için {user['daily_food']//2}g mama verildi!")
-                st.balloons()
-        
-        with col2:
-            if st.button("📸 Canlı Görüntü", use_container_width=True):
-                st.info("📹 Canlı yayın özelliği yakında aktif!")
-        
-        with col3:
-            if st.button("📊 Günlük Rapor", use_container_width=True):
-                st.info("📈 Detaylı raporlar hazırlanıyor...")
-        
-        # Health Alert
-        if status_type != "success":
-            st.markdown(f"""
-            <div class="alert-card">
-                <h4>⚠️ Sağlık Uyarısı</h4>
-                <p>{user['dog_name']} {weight_status.lower()} kategorisinde. {status_message}.</p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Feeding Tab
-    with tabs[1]:
-        st.markdown("## 🍖 Akıllı Besleme Programı")
-        
-        schedule = generate_feeding_schedule(user["daily_food"])
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown(f"""
-            <div class="dashboard-stat">
-                <h3>☀️ Sabah Öğünü</h3>
-                <p style="font-size: 2rem; color: #667eea; margin: 20px 0;">
-                    {schedule['morning']['time']}
-                </p>
-                <p style="font-size: 1.5rem;">
-                    {schedule['morning']['amount']}g
-                </p>
-                <button style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 10px; margin-top: 10px;">
-                    Sabah Beslemesini Ayarla
-                </button>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class="dashboard-stat">
-                <h3>🌙 Akşam Öğünü</h3>
-                <p style="font-size: 2rem; color: #764ba2; margin: 20px 0;">
-                    {schedule['evening']['time']}
-                </p>
-                <p style="font-size: 1.5rem;">
-                    {schedule['evening']['amount']}g
-                </p>
-                <button style="width: 100%; padding: 10px; background: #764ba2; color: white; border: none; border-radius: 10px; margin-top: 10px;">
-                    Akşam Beslemesini Ayarla
-                </button>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Weekly Schedule
-        st.markdown("### 📅 Haftalık Besleme Grafiği")
-        
-        # Generate sample data
-        dates = [(datetime.now() - timedelta(days=i)).strftime("%d/%m") for i in range(7, 0, -1)]
-        planned = [user["daily_food"]] * 7
-        actual = [user["daily_food"] + random.randint(-50, 50) for _ in range(7)]
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates, y=planned,
-            mode='lines+markers',
-            name='Planlanan',
-            line=dict(color='#667eea', width=3)
-        ))
-        fig.add_trace(go.Scatter(
-            x=dates, y=actual,
-            mode='lines+markers',
-            name='Gerçekleşen',
-            line=dict(color='#764ba2', width=3)
-        ))
-        
-        fig.update_layout(
-            title="Son 7 Günlük Besleme Takibi",
-            xaxis_title="Tarih",
-            yaxis_title="Mama Miktarı (g)",
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Cost Tab
-    with tabs[2]:
-        st.markdown("## 💰 Maliyet Analizi ve Tasarruf")
-        
-        # Monthly cost calculation
-        daily_kg = user["daily_food"] / 1000
-        monthly_kg = daily_kg * 30
-        
-        # Price comparison
-        prices = {
-            "Premium Mama": 550,
-            "Standart Mama": 450,
-            "Ekonomik Mama": 350
-        }
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            # Cost comparison chart
-            fig = go.Figure()
+        # Besleme grafiği
+        if st.session_state.feeding_logs:
+            df = pd.DataFrame(st.session_state.feeding_logs)
             
-            for food_type, price_per_kg in prices.items():
-                monthly_costs = [monthly_kg * price_per_kg * (i+1) for i in range(12)]
-                fig.add_trace(go.Scatter(
-                    x=list(range(1, 13)),
-                    y=monthly_costs,
-                    mode='lines+markers',
-                    name=f'{food_type} ({price_per_kg}₺/kg)'
-                ))
-            
-            fig.update_layout(
-                title="12 Aylık Maliyet Projeksiyonu",
-                xaxis_title="Ay",
-                yaxis_title="Toplam Maliyet (₺)",
-                height=400
-            )
+            fig = px.bar(df.groupby('dog')['amount'].sum().reset_index(),
+                        x='dog', y='amount',
+                        title='Köpeklere Göre Toplam Besleme',
+                        labels={'amount': 'Miktar (g)', 'dog': 'Köpek'})
             
             st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            current_monthly = monthly_kg * 450
-            yearly = current_monthly * 12
-            
-            st.markdown(f"""
-            <div class="price-card">
-                <h3>Mevcut Giderler</h3>
-                <p style="font-size: 0.9rem; opacity: 0.8; margin: 10px 0;">Aylık</p>
-                <p style="font-size: 2.5rem; margin: 0;">{current_monthly:,.0f}₺</p>
-                <hr style="opacity: 0.3; margin: 20px 0;">
-                <p style="font-size: 0.9rem; opacity: 0.8; margin: 10px 0;">Yıllık</p>
-                <p style="font-size: 2rem; margin: 0;">{yearly:,.0f}₺</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Savings tips
-        st.markdown("### 💡 Tasarruf Önerileri")
-        
-        savings = [
-            {"tip": "🛍️ Toplu alımda %15 indirim", "amount": current_monthly * 0.15},
-            {"tip": "📅 Aylık abonelikte %10 indirim", "amount": current_monthly * 0.10},
-            {"tip": "🥗 Haftada 2 öğün ev yemeği", "amount": current_monthly * 0.20}
-        ]
-        
-        total_savings = sum(s["amount"] for s in savings)
-        
-        for saving in savings:
-            st.markdown(f"""
-            <div class="success-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>{saving['tip']}</span>
-                    <span style="font-size: 1.2rem; font-weight: 600;">
-                        {saving['amount']:,.0f}₺/ay
-                    </span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div style="text-align: center; margin: 30px 0;">
-            <h3>💰 Toplam Tasarruf Potansiyeli</h3>
-            <p style="font-size: 2.5rem; color: #28a745; font-weight: 700;">
-                {total_savings:,.0f}₺/ay
-            </p>
-            <p style="color: #6c757d;">Yıllık {total_savings * 12:,.0f}₺ tasarruf!</p>
-        </div>
-        """, unsafe_allow_html=True)
     
-    # Health Tab
+    # Ayarlar
     with tabs[3]:
-        st.markdown("## 🏥 Sağlık Takibi")
+        st.markdown("### ⚙️ Sistem Ayarları")
         
-        # Weight tracking
-        breed_info = DOG_BREEDS[user["dog_breed"]]
+        st.markdown("#### 🕐 Otomatik Besleme Zamanları")
+        col1, col2 = st.columns(2)
+        with col1:
+            morning_time = st.time_input("Sabah Besleme", datetime.strptime("07:00", "%H:%M").time())
+        with col2:
+            evening_time = st.time_input("Akşam Besleme", datetime.strptime("18:00", "%H:%M").time())
         
-        # Generate sample weight data
-        dates = [(datetime.now() - timedelta(days=i*30)).strftime("%B") for i in range(6, 0, -1)]
-        weights = [user["dog_weight"] + random.uniform(-1, 1) for _ in range(6)]
-        
-        fig = go.Figure()
-        
-        # Add weight line
-        fig.add_trace(go.Scatter(
-            x=dates, y=weights,
-            mode='lines+markers',
-            name='Kilo',
-            line=dict(color='#667eea', width=3)
-        ))
-        
-        # Add ideal weight range
-        fig.add_trace(go.Scatter(
-            x=dates, y=[breed_info["min_weight"]] * 6,
-            mode='lines',
-            name='Min İdeal',
-            line=dict(color='green', dash='dash')
-        ))
-        
-        fig.add_trace(go.Scatter(
-            x=dates, y=[breed_info["max_weight"]] * 6,
-            mode='lines',
-            name='Max İdeal',
-            line=dict(color='red', dash='dash'),
-            fill='tonexty',
-            fillcolor='rgba(0,255,0,0.1)'
-        ))
-        
-        fig.update_layout(
-            title=f"{user['dog_name']} - Kilo Takibi",
-            xaxis_title="Ay",
-            yaxis_title="Kilo (kg)",
-            height=400
+        st.markdown("#### 📱 Bildirimler")
+        notifications = st.multiselect(
+            "Bildirim Tercihleri",
+            ["Besleme tamamlandı", "Mama azaldı", "Pil zayıf", "Cihaz çevrimdışı"],
+            default=["Besleme tamamlandı", "Mama azaldı"]
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("#### 🌡️ Hava Durumu Ayarları")
+        weather_alerts = st.checkbox("Hava durumu uyarılarını göster", value=True)
         
-        # Health recommendations
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("""
-            <div class="info-card">
-                <h4>📋 Sağlık Durumu</h4>
-                <ul style="margin: 15px 0;">
-                    <li>Kilo durumu: """ + weight_status + """</li>
-                    <li>Aktivite seviyesi: Normal</li>
-                    <li>Son veteriner kontrolü: 2 ay önce</li>
-                    <li>Aşı durumu: Güncel</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class="alert-card">
-                <h4>💊 Yaklaşan İşlemler</h4>
-                <ul style="margin: 15px 0;">
-                    <li>Kuduz aşısı - 3 ay sonra</li>
-                    <li>Parazit tedavisi - 1 ay sonra</li>
-                    <li>Diş kontrolü - 6 ay sonra</li>
-                    <li>Genel kontrol - 4 ay sonra</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # AI Assistant Tab
-    with tabs[4]:
-        st.markdown("## 🤖 Claude AI Asistanı")
-        
-        # Pre-made questions
-        questions = [
-            f"{user['dog_name']} için ideal beslenme programı nedir?",
-            f"{user['dog_breed']} ırkı için dikkat edilmesi gerekenler",
-            "Kilo kontrolü için öneriler",
-            "Aktivite ve egzersiz programı"
-        ]
-        
-        st.markdown("### 💡 Hızlı Sorular")
-        
-        cols = st.columns(2)
-        for i, question in enumerate(questions):
-            with cols[i % 2]:
-                if st.button(question, key=f"q_{i}", use_container_width=True):
-                    with st.spinner("Claude AI yanıt hazırlıyor..."):
-                        # Simulate AI response
-                        if i == 0:
-                            response = f"""
-                            🤖 **{user['dog_name']} için Özel Beslenme Programı:**
-                            
-                            {user['dog_breed']} ırkı ve {user['dog_weight']}kg ağırlığı göz önüne alındığında:
-                            
-                            **Günlük Öneriler:**
-                            - Sabah 07:00: {schedule['morning']['amount']}g ({schedule['morning']['amount']*4} kalori)
-                            - Akşam 18:00: {schedule['evening']['amount']}g ({schedule['evening']['amount']*4} kalori)
-                            - Toplam: {user['daily_food']}g/gün
-                            
-                            **Mama Önerileri:**
-                            1. Royal Canin {user['dog_breed']} Adult
-                            2. Hill's Science Diet Large Breed
-                            3. Acana Heritage Free-Run Poultry
-                            
-                            **Özel Notlar:**
-                            - Bol taze su bulundurun
-                            - Öğünler arası atıştırmalık vermeyin
-                            - Haftada 1-2 kez kemik verilebilir
-                            """
-                        elif i == 1:
-                            response = f"""
-                            🦴 **{user['dog_breed']} Irkı Hakkında:**
-                            
-                            **Karakteristik Özellikler:**
-                            - Ortalama yaşam süresi: 10-12 yıl
-                            - Enerji seviyesi: Yüksek
-                            - Egzersiz ihtiyacı: Günde 60-90 dakika
-                            
-                            **Sağlık Riskleri:**
-                            - Kalça displazisi riski
-                            - Göz problemleri
-                            - Cilt alerjileri
-                            
-                            **Bakım Önerileri:**
-                            - Düzenli tüy bakımı
-                            - Haftalık kulak temizliği
-                            - 3 ayda bir tırnak kesimi
-                            """
-                        else:
-                            response = "AI yanıtı hazırlanıyor..."
-                        
-                        st.markdown(f"""
-                        <div class="info-card" style="margin-top: 20px;">
-                            {response}
-                        </div>
-                        """, unsafe_allow_html=True)
-        
-        # Custom question
-        st.markdown("### 💬 Soru Sorun")
-        user_question = st.text_area("Claude AI'ya sorunuzu yazın...", height=100)
-        
-        if st.button("🤖 Yanıt Al", use_container_width=True):
-            if user_question:
-                with st.spinner("Yanıt hazırlanıyor..."):
-                    st.markdown(f"""
-                    <div class="info-card" style="margin-top: 20px;">
-                        <h4>🤖 Claude AI Yanıtı:</h4>
-                        <p>Sorunuz analiz ediliyor. {user['dog_name']} için özel yanıt hazırlanıyor...</p>
-                        <p style="margin-top: 15px;">
-                        Demo versiyonda temel AI desteği sunulmaktadır. 
-                        Gelişmiş özellikler için tam sürümü kullanabilirsiniz!
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
-    
+        if st.button("💾 Ayarları Kaydet", use_container_width=True):
+            st.success("✅ Ayarlar kaydedildi!")
 
 # Footer
 st.markdown("""
 <hr style="margin: 60px 0 20px 0;">
-<div style="text-align: center; color: #6c757d; padding: 20px;">
-    <p>🐾 PetFeeder Pro - Akıllı Köpek Besleme Sistemi</p>
-    <p>Made with ❤️ for pet lovers | © 2024</p>
-    <p style="margin-top: 10px;">
-        <a href="#" style="color: #667eea; text-decoration: none; margin: 0 10px;">Gizlilik</a> |
-        <a href="#" style="color: #667eea; text-decoration: none; margin: 0 10px;">Kullanım Koşulları</a> |
-        <a href="#" style="color: #667eea; text-decoration: none; margin: 0 10px;">İletişim</a>
-    </p>
+<div style="text-align: center; color: #6b7280; padding: 20px;">
+    <p>🐾 PetKit Akıllı Besleyici Kontrol Sistemi - Demo</p>
+    <p>Gerçek sistem PetKit API ile entegre çalışır</p>
 </div>
 """, unsafe_allow_html=True)
